@@ -1,7 +1,4 @@
-use std::env;
-use std::fs;
 use std::fs::read_to_string;
-use std::num;
 
 fn main() {
     day1();
@@ -11,6 +8,7 @@ fn day1() {
     let mut left : Vec<i32> = Vec::new();
     let mut right : Vec<i32> = Vec::new();
     let mut total: i32 = 0;
+    let mut p2_total : i32 = 0;
 
     for line in read_to_string("inputs/day1.txt").unwrap().lines() {
         let res: Vec<&str> = line.split("   ").collect();
@@ -23,7 +21,13 @@ fn day1() {
 
     for (index, value) in left.iter().enumerate() {
         total = total + (value - right[index]).abs();
+        for v2 in right.iter() {
+            if value == v2 {
+                p2_total = p2_total + value;
+            }
+        }
     }
 
-    println!("{}",total);
+    println!("Day 1 P1: {}",total);
+    println!("Day 1 P2: {}",p2_total);
 }
