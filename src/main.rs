@@ -1,8 +1,10 @@
 use std::fs::read_to_string;
+use regex::Regex;
 
 fn main() {
     day1();
     day2();
+    println!("{}",day3(read_to_string("inputs/day3.txt").unwrap()));
 }
 
 fn day1() {
@@ -113,7 +115,18 @@ fn check_line_day_2(res: &Vec<&str>) -> bool {
 
 fn day3(input: String) -> i32 {
     let mut output = 0;
+    let instructions_match = Regex::new(r"mul\([0-9]*\,[0-9]*\)").unwrap();
+    let numbers_match = Regex::new(r"mul\((\d+),\s*(\d+)\)").unwrap();
+    for instruction in instructions_match.captures_iter(input.as_str()) {
+        let raw_numbers = instruction.get(0).unwrap().as_str();
 
+        let captures = numbers_match.captures(raw_numbers).unwrap();
+        let first_number = captures.get(1).unwrap().as_str();
+        let second_number = captures.get(2).unwrap().as_str();
+
+        output += first_number.parse::<i32>().unwrap() * second_number.parse::<i32>().unwrap();
+
+    }
     output
 }
 
@@ -125,7 +138,7 @@ mod tests {
 
     #[test]
     fn day_3() {
-        let input: String = fs::read_to_string("inputs/test/day3.txt").unwrap();
+        let input: String = fs::read_to_string("inputs/tests/day3.txt").unwrap();
         let result = day3(input);
         assert_eq!(result, 161);
     }
