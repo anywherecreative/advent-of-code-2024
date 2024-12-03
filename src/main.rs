@@ -111,4 +111,22 @@ fn check_line_day_2(res: &Vec<&str>) -> bool {
     true
 }
 
+fn day3(input: String) -> i32 {
+    let mut output = 0;
 
+    output
+}
+
+
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use super::*;
+
+    #[test]
+    fn day_3() {
+        let input: String = fs::read_to_string("inputs/test/day3.txt").unwrap();
+        let result = day3(input);
+        assert_eq!(result, 161);
+    }
+}
