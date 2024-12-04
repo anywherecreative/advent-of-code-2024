@@ -6,6 +6,7 @@ fn main() {
     day2();
     println!("Day 3 P1: {}",day3(read_to_string("inputs/day3.txt").unwrap()));
     println!("Day 3, P2: {}",day3_part2(read_to_string("inputs/day3.txt").unwrap()));
+    println!("Day 4, P1: {}",day4(read_to_string("inputs/tests/day4.txt").unwrap()));
 }
 
 fn day1() {
@@ -158,7 +159,48 @@ fn day3_part2(input: String) -> i32 {
 
 fn day4(input: String) -> i32 {
     let mut output = 0;
+    let line_length = input.find('\n').unwrap();
+    let mut formatted_input  =input.replace('\n', "").replace('\r', "").to_lowercase();
+    let file_length = formatted_input.chars().count();
 
+    for (index, letter) in formatted_input.chars().enumerate() {
+        //only check for x characters
+        if letter != 'x' {
+            continue;
+        }
+
+        //check to the right
+        //got to check if we've exceeded line length
+        // use modulus operator? line mod index
+        if ((index % line_length) + 4) < line_length &&  ((index % line_length) + 4) < file_length {
+            if formatted_input[index..index+4].to_string() == "xmas" {
+                output+=1;
+            }
+
+        }
+        if (index % line_length) >= 3 {
+            if formatted_input[index-3..index+1].to_string() == "samx" {
+                println!("run");
+                output+=1;
+            }
+        }
+
+        //check down
+        let xmas_last_index = (index % line_length) + (line_length * 3);
+        if xmas_last_index < file_length {
+            let check = "x" + formatted_input[index + line_length] + formatted_input[index + (line_length * 2)] + formatted_input[index + (line_length * 3)];
+            if(check == "xmas") {
+                output+=1;
+            }
+        }
+
+        //check up
+
+        //check diagonal right
+
+        //check diagonal left
+
+    }
     output
 }
 
