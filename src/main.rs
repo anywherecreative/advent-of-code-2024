@@ -156,6 +156,12 @@ fn day3_part2(input: String) -> i32 {
     output
 }
 
+fn day4(input: String) -> i32 {
+    let mut output = 0;
+
+    output
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -174,5 +180,12 @@ mod tests {
         let input: String = fs::read_to_string("inputs/tests/day3.txt").unwrap();
         let result = day3_part2(input);
         assert_eq!(result, 48);
+    }
+
+    #[test]
+    fn test_day4() {
+        let input: String = fs::read_to_string("inputs/tests/day4.txt").unwrap();
+        let result = day4(input);
+        assert_eq!(result, 18);
     }
 }
