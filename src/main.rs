@@ -194,7 +194,16 @@ fn day4(input: String) -> i32 {
             }
         }
 
-        //check up
+        let xmas_first_index = (index % line_length) - (line_length * 3);
+        if xmas_first_index > 0 {
+            let check = "x" + formatted_input[index + line_length] + formatted_input[index + (line_length * 2)] + formatted_input[index + (line_length * 3)];
+            if(check == "xmas") {
+                output+=1;
+            }
+            else {
+                println!("{}",check);
+            }
+        }
 
         //check diagonal right
 
