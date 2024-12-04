@@ -4,7 +4,8 @@ use regex::Regex;
 fn main() {
     day1();
     day2();
-    println!("{}",day3(read_to_string("inputs/day3.txt").unwrap()));
+    println!("Day 3 P1: {}",day3(read_to_string("inputs/day3.txt").unwrap()));
+    println!("Day 3, P2: {}",day3_part2(read_to_string("inputs/day3.txt").unwrap()));
 }
 
 fn day1() {
@@ -130,6 +131,31 @@ fn day3(input: String) -> i32 {
     output
 }
 
+fn day3_part2(input: String) -> i32 {
+    //break the string
+    let mut formatted_input  = ("do()".to_owned() + &*input + "don't()").replace('\n', "").replace('\r', "");;
+    let mut output = 0;
+    let instructions_match = Regex::new(r"mul\([0-9]*\,[0-9]*\)").unwrap();
+    let numbers_match = Regex::new(r"mul\((\d+),\s*(\d+)\)").unwrap();
+    let control_match = Regex::new(r"do\(\)(.*?)don't\(\)").unwrap();
+
+    for allowed in control_match.captures_iter(formatted_input.as_str()) {
+        let res = allowed.get(0).unwrap().as_str();
+        for instruction in instructions_match.captures_iter(res) {
+            let raw_numbers = instruction.get(0).unwrap().as_str();
+
+            let captures = numbers_match.captures(raw_numbers).unwrap();
+            let first_number = captures.get(1).unwrap().as_str();
+            let second_number = captures.get(2).unwrap().as_str();
+
+            output += first_number.parse::<i32>().unwrap() * second_number.parse::<i32>().unwrap();
+
+        }
+    }
+
+    output
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -137,9 +163,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn day_3() {
+    fn test_day3() {
         let input: String = fs::read_to_string("inputs/tests/day3.txt").unwrap();
         let result = day3(input);
         assert_eq!(result, 161);
+    }
+
+    #[test]
+    fn test_day3_part2() {
+        let input: String = fs::read_to_string("inputs/tests/day3.txt").unwrap();
+        let result = day3_part2(input);
+        assert_eq!(result, 48);
     }
 }
