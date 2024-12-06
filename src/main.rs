@@ -6,7 +6,7 @@ fn main() {
     day2();
     println!("Day 3 P1: {}",day3(read_to_string("inputs/day3.txt").unwrap()));
     println!("Day 3, P2: {}",day3_part2(read_to_string("inputs/day3.txt").unwrap()));
-    println!("Day 4, P1: {}",day4(read_to_string("inputs/tests/day4.txt").unwrap()));
+    println!("Day 4, P1: {}",day4(read_to_string("inputs/day4.txt").unwrap()));
 }
 
 fn day1() {
@@ -180,35 +180,100 @@ fn day4(input: String) -> i32 {
         }
         if (index % line_length) >= 3 {
             if formatted_input[index-3..index+1].to_string() == "samx" {
-                println!("run");
                 output+=1;
             }
         }
 
         //check down
-        let xmas_last_index = (index % line_length) + (line_length * 3);
+        let xmas_last_index = index + (line_length * 3);
         if xmas_last_index < file_length {
-            let check = "x" + formatted_input[index + line_length] + formatted_input[index + (line_length * 2)] + formatted_input[index + (line_length * 3)];
+            let check = format!(
+                "x{}{}{}",
+                formatted_input.chars().nth(index + line_length).unwrap_or_default(),
+                formatted_input.chars().nth(index + (line_length * 2)).unwrap_or_default(),
+                formatted_input.chars().nth(index + (line_length * 3)).unwrap_or_default()
+            );
+
             if(check == "xmas") {
                 output+=1;
             }
         }
-
-        let xmas_first_index = (index % line_length) - (line_length * 3);
+        //check up
+        let xmas_first_index: isize = index as isize - (line_length * 3) as isize;
         if xmas_first_index > 0 {
-            let check = "x" + formatted_input[index + line_length] + formatted_input[index + (line_length * 2)] + formatted_input[index + (line_length * 3)];
+
+            let check = format!(
+                "x{}{}{}",
+                formatted_input.chars().nth(index - line_length).unwrap_or_default(),
+                formatted_input.chars().nth(index - (line_length * 2)).unwrap_or_default(),
+                formatted_input.chars().nth(index - (line_length * 3)).unwrap_or_default()
+            );
+
             if(check == "xmas") {
                 output+=1;
             }
-            else {
-                println!("{}",check);
+        }
+
+        //check diagonal down right
+        //current position + 3 lines + 3 chars for the diagonal offset
+        let boundary = index + (line_length * 3) + 3;
+        if boundary < file_length {
+            let check = format!(
+                "x{}{}{}",
+                formatted_input.chars().nth(index + line_length + 1).unwrap_or_default(),
+                formatted_input.chars().nth(index + (line_length * 2) + 2).unwrap_or_default(),
+                formatted_input.chars().nth(index + (line_length * 3) + 3).unwrap_or_default()
+            );
+
+            if(check == "xmas") {
+                output+=1;
             }
         }
 
-        //check diagonal right
+        //check diagonal down left
+        let boundary =  index + (line_length * 3) - 3;
 
-        //check diagonal left
+        if boundary < file_length {
+            let check = format!(
+                "x{}{}{}",
+                formatted_input.chars().nth(index + line_length - 1).unwrap_or_default(),
+                formatted_input.chars().nth(index + (line_length * 2) - 2).unwrap_or_default(),
+                formatted_input.chars().nth(index + (line_length * 3) - 3).unwrap_or_default()
+            );
 
+            if(check == "xmas") {
+                output+=1;
+            }
+        }
+        //check diagonal up right
+        let boundary_a :isize =  index as isize - (line_length * 3) as isize + 3;
+        if boundary_a >= 0 {
+            let check = format!(
+                "x{}{}{}",
+                formatted_input.chars().nth(index + 1 - line_length).unwrap_or_default(),
+                formatted_input.chars().nth(index + 2 - (line_length * 2)).unwrap_or_default(),
+                formatted_input.chars().nth(index + 3 - (line_length * 3)).unwrap_or_default()
+            );
+
+            if(check == "xmas") {
+                output+=1;
+            }
+        }
+
+        //check diagonal up left
+        let boundary :isize =  index as isize - (line_length * 3) as isize - 3;
+        if boundary >= 0 {
+            let check = format!(
+                "x{}{}{}",
+                formatted_input.chars().nth(index - line_length - 1).unwrap_or_default(),
+                formatted_input.chars().nth(index - (line_length * 2) - 2).unwrap_or_default(),
+                formatted_input.chars().nth(index - (line_length * 3) - 3).unwrap_or_default()
+            );
+
+            if(check == "xmas") {
+                output+=1;
+            }
+        }
     }
     output
 }
