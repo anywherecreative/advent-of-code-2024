@@ -1,3 +1,4 @@
+use std::fs;
 use std::fs::read_to_string;
 use regex::Regex;
 
@@ -5,7 +6,10 @@ fn main() {
     day1();
     day2();
     println!("Day 3 P1: {}",day3(read_to_string("inputs/day3.txt").unwrap()));
-    println!("Day 3, P2: {}",day3_part2(read_to_string("inputs/day3.txt").unwrap()));
+    println!("Day 3 P2: {}",day3_part2(read_to_string("inputs/day3.txt").unwrap()));
+    let input_order_rules: String = fs::read_to_string("inputs/day5_order_rules.txt").unwrap();
+    let input_manuals: String = fs::read_to_string("inputs/day5_manuals.txt").unwrap();
+    println!("Day 5 P1: {}",day5(input_order_rules,input_manuals));
 }
 
 fn day1() {
@@ -133,7 +137,7 @@ fn day3(input: String) -> i32 {
 
 fn day3_part2(input: String) -> i32 {
     //break the string
-    let mut formatted_input  = ("do()".to_owned() + &*input + "don't()").replace('\n', "").replace('\r', "");;
+    let mut formatted_input  = ("do()".to_owned() + &*input + "don't()").replace('\n', "").replace('\r', "");
     let mut output = 0;
     let instructions_match = Regex::new(r"mul\([0-9]*\,[0-9]*\)").unwrap();
     let numbers_match = Regex::new(r"mul\((\d+),\s*(\d+)\)").unwrap();
@@ -156,6 +160,39 @@ fn day3_part2(input: String) -> i32 {
     output
 }
 
+fn day5(input_order_rules: String, input_manuals: String) -> i32 {
+    let mut output = 0;
+    for manual in input_manuals.lines() {
+        let mut passing = true;
+        for rule in input_order_rules.lines() {
+            let (left, right) = split_to_tuple(rule, '|');
+            if let Some(left_num) = manual.find(left) {
+                if let Some(right_num) = manual.find(right) {
+                    if left_num > right_num {
+                        //get half the length
+                        passing = false;
+                        break; //fail
+                    }
+                }
+            }
+        }
+
+        if(passing) {
+            let parts = manual.split(",").collect::<Vec<&str>>();
+            output += parts[parts.len()/2].parse::<i32>().unwrap()
+        }
+    }
+
+    output.try_into().unwrap()
+}
+
+fn split_to_tuple(s: &str, delimiter: char) -> (&str, &str) {
+    let mut parts = s.split(delimiter);
+    let left = parts.next().unwrap_or("");
+    let right = parts.next().unwrap_or("");
+    (left, right)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -174,5 +211,13 @@ mod tests {
         let input: String = fs::read_to_string("inputs/tests/day3.txt").unwrap();
         let result = day3_part2(input);
         assert_eq!(result, 48);
+    }
+
+    #[test]
+    fn test_day5() {
+        let input_order_rules: String = fs::read_to_string("inputs/tests/day5_order_rules.txt").unwrap();
+        let input_manuals: String = fs::read_to_string("inputs/tests/day5_manuals.txt").unwrap();
+        let result = day5(input_order_rules,input_manuals);
+        assert_eq!(result, 143);
     }
 }
