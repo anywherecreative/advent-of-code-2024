@@ -3,15 +3,22 @@ use std::fs::read_to_string;
 use regex::Regex;
 
 fn main() {
-    day1();
-    day2();
-    println!("Day 3 P1: {}",day3(read_to_string("inputs/day3.txt").unwrap()));
-    println!("Day 3 P2: {}",day3_part2(read_to_string("inputs/day3.txt").unwrap()));
-    let input_order_rules: String = fs::read_to_string("inputs/day5_order_rules.txt").unwrap();
-    let input_manuals: String = fs::read_to_string("inputs/day5_manuals.txt").unwrap();
-    println!("Day 5 P1: {}",day5(input_order_rules,input_manuals));
+    // day1();
+    // day2();
+    // println!("Day 3 P1: {}",day3(read_to_string("inputs/day3.txt").unwrap()));
+    // println!("Day 3 P2: {}",day3_part2(read_to_string("inputs/day3.txt").unwrap()));
+    // let input_order_rules: String = fs::read_to_string("inputs/day5_order_rules.txt.txt").unwrap();
+    // let input_manuals: String = fs::read_to_string("inputs/day5_manuals.txt").unwrap();
+    // println!("Day 5 P1: {}",day5(input_order_rules,input_manuals));
+    
+    let file_content =  fs::read_to_string("inputs/day5_part2.txt").unwrap();
+    let day5_input= file_content.split("\n\n").collect::<Vec<&str>>();
+    let (input_order_rules, input_manuals) = day5_input.split_at(1);
+    let result = day5_part2(input_order_rules[0].to_string(),input_manuals[0].to_string());
+    println!("Result: {}", result);
 }
 
+#[allow(dead_code)]
 fn day1() {
     let mut left : Vec<i32> = Vec::new();
     let mut right : Vec<i32> = Vec::new();
@@ -40,6 +47,7 @@ fn day1() {
     println!("Day 1 P2: {}",p2_total);
 }
 
+#[allow(dead_code)]
 fn day2() {
     let mut total_safe: i32 = 0;
     let mut total_safe_p2: i32 = 0;
@@ -71,6 +79,7 @@ fn day2() {
     println!("Day 2 P2: {}", total_safe_p2);
 }
 
+#[allow(dead_code)]
 fn check_day_2(previous: i32, current:i32, increasing: bool) -> bool{
     if previous > current && increasing {
         return false
@@ -87,13 +96,14 @@ fn check_day_2(previous: i32, current:i32, increasing: bool) -> bool{
     true
 }
 
+#[allow(dead_code)]
 fn check_line_day_2(res: &Vec<&str>) -> bool {
     let mut previous_number = 0;
     let mut increasing: bool = false;
     for (index, num) in res.iter().enumerate() {
         let num = num.parse::<i32>().unwrap();
         if index == 0 {
-            previous_number = num;
+            continue;
         } else if index == 1 {
             if previous_number > num {
                 increasing = false;
@@ -118,6 +128,7 @@ fn check_line_day_2(res: &Vec<&str>) -> bool {
     true
 }
 
+#[allow(dead_code)]
 fn day3(input: String) -> i32 {
     let mut output = 0;
     let instructions_match = Regex::new(r"mul\([0-9]*\,[0-9]*\)").unwrap();
@@ -135,9 +146,10 @@ fn day3(input: String) -> i32 {
     output
 }
 
+#[allow(dead_code)]
 fn day3_part2(input: String) -> i32 {
     //break the string
-    let mut formatted_input  = ("do()".to_owned() + &*input + "don't()").replace('\n', "").replace('\r', "");
+    let formatted_input  = ("do()".to_owned() + &*input + "don't()").replace('\n', "").replace('\r', "");
     let mut output = 0;
     let instructions_match = Regex::new(r"mul\([0-9]*\,[0-9]*\)").unwrap();
     let numbers_match = Regex::new(r"mul\((\d+),\s*(\d+)\)").unwrap();
@@ -160,6 +172,7 @@ fn day3_part2(input: String) -> i32 {
     output
 }
 
+#[allow(dead_code)]
 fn day5(input_order_rules: String, input_manuals: String) -> i32 {
     let mut output = 0;
     for manual in input_manuals.lines() {
@@ -177,9 +190,49 @@ fn day5(input_order_rules: String, input_manuals: String) -> i32 {
             }
         }
 
-        if(passing) {
+        if passing {
             let parts = manual.split(",").collect::<Vec<&str>>();
             output += parts[parts.len()/2].parse::<i32>().unwrap()
+        }
+    }
+
+    output.try_into().unwrap()
+}
+
+fn day5_part2(input_order_rules: String, input_manuals: String) -> i32 {
+
+    let mut output = 0;
+    let mut manuals: Vec<Vec<&str>> = Vec::new();
+    for (i,manual) in input_manuals.lines().into_iter().enumerate() {
+
+
+        // let mut passing = true;
+       manuals.push(manual.split(",").collect::<Vec<&str>>());
+
+        let mut changed = true;
+        let mut add = false;
+        while changed == true {
+            changed = false;
+            for rule in input_order_rules.lines() {
+                let (left, right) = split_to_tuple(rule, '|');
+
+                if let Some(left_num) = manuals[i].iter().position(|&l| l == left) {
+                    if let Some(right_num) = manuals[i].iter().position(|&r| r == right) {
+                        if left_num > right_num {
+                            let left = manuals[i][left_num];
+                            manuals[i][left_num] = manuals[i][right_num];
+                            manuals[i][right_num] = left;
+                            changed = true;
+                            add = true;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        if add == true {
+             output += manuals[i][(manuals[i].len() / 2 + (manuals[i].len() % 2))-1].parse::<i32>().unwrap()
         }
     }
 
@@ -215,9 +268,19 @@ mod tests {
 
     #[test]
     fn test_day5() {
-        let input_order_rules: String = fs::read_to_string("inputs/tests/day5_order_rules.txt").unwrap();
-        let input_manuals: String = fs::read_to_string("inputs/tests/day5_manuals.txt").unwrap();
-        let result = day5(input_order_rules,input_manuals);
+        let file_content =  fs::read_to_string("inputs/tests/day5_order_rules.txt").unwrap();
+        let day5_input= file_content.split("\n\n").collect::<Vec<&str>>();
+        let (input_order_rules, input_manuals) = day5_input.split_at(1);
+        let result = day5(input_order_rules[0].to_string(),input_manuals[0].to_string());
         assert_eq!(result, 143);
     }
+
+    #[test]
+     fn test_day5_part2() {
+            let file_content =  fs::read_to_string("inputs/tests/day5_order_rules.txt").unwrap();
+            let day5_input= file_content.split("\n\n").collect::<Vec<&str>>();
+            let (input_order_rules, input_manuals) = day5_input.split_at(1);
+            let result = day5_part2(input_order_rules[0].to_string(),input_manuals[0].to_string());
+            assert_eq!(result, 123);
+        }
 }
