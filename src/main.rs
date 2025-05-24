@@ -250,7 +250,7 @@ fn split_to_tuple(s: &str, delimiter: char) -> (&str, &str) {
     (left, right)
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum Direction {
     North,
     South,
@@ -258,7 +258,7 @@ enum Direction {
     West,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 enum Tiles {
     Obstacle,
     Guard(Direction),
@@ -397,6 +397,165 @@ fn day6(input: String) -> i32 {
     tiles_covered
 }
 
+fn day6_part2(input: String) -> i32 {
+    struct Guard {
+        direction: Direction,
+        position: (usize, usize),
+        start_position: (usize, usize),
+        start_direction: Direction,
+        on_screen: bool,
+    }
+
+    let mut guard: Guard = Guard {
+        direction: Direction::North,
+        start_direction: Direction::North,
+        position: (0,0),
+        start_position: (0,0),
+        on_screen: false,
+    };
+
+    let mut level: Vec<Vec<Tiles>> = Vec::new();
+
+    for (i,row) in input.lines().into_iter().enumerate() {
+        let mut row_vec: Vec<Tiles> = Vec::new();
+        for (j,tile) in row.chars().enumerate() {
+            if tile == '.' {
+                row_vec.push(Tiles::Empty);
+            }
+            else if tile == '#' {
+                row_vec.push(Tiles::Obstacle);
+            }
+            else if tile == '^' {
+                guard = Guard {
+                    direction: Direction::North,
+                    position: (i, j),
+                    start_position: (i,j),
+                    start_direction: Direction::North,
+                    on_screen: true,
+                };
+                row_vec.push(Tiles::Guard(Direction::North));
+            }
+            else if tile == '>' {
+                guard = Guard {
+                    direction: Direction::East,
+                    position: (i, j),
+                    start_position: (i,j),
+                    start_direction: Direction::East,
+                    on_screen: true,
+                };
+                row_vec.push(Tiles::Guard(Direction::East));
+            }
+            else if tile == 'v' {
+                guard = Guard {
+                    direction: Direction::South,
+                    position: (i, j),
+                    start_position: (i,j),
+                    start_direction: Direction::South,
+                    on_screen: true,
+                };
+                row_vec.push(Tiles::Guard(Direction::South));
+            }
+            else {
+                guard = Guard {
+                    direction: Direction::West,
+                    position: (i, j),
+                    start_position: (i,j),
+                    start_direction: Direction::West,
+                    on_screen: true,
+                };
+                row_vec.push(Tiles::Guard(Direction::West));
+            }
+
+        }
+        level.push(row_vec);
+    }
+
+    let mut loops_count = 0;
+    for (y,row) in level.clone().iter().enumerate() {
+        for (x,tile) in row.iter().enumerate() {
+
+            let mut level_clone = level.clone();
+            guard.position = guard.start_position;
+            guard.direction = guard.start_direction;
+            guard.on_screen = true;
+
+
+            if (x, y) == guard.start_position {
+                //can't place on guard
+                continue;
+            }
+            if tile == &Tiles::Obstacle {
+                //can't place on an Obstacle
+                continue;
+            }
+            level_clone[y][x] = Tiles::Obstacle;
+
+            while guard.on_screen == true {
+                match guard.direction {
+                    Direction::North => {
+                        if guard.position.0 == 0 {
+                            guard.on_screen = false;
+                            break;
+                        }
+                        if level_clone[guard.position.0-1][guard.position.1] == Tiles::Obstacle {
+                            guard.direction = Direction::East;
+                            continue;
+                        }
+                        level_clone[guard.position.0-1][guard.position.1] = Tiles::Guard(Direction::North);
+                        level_clone[guard.position.0][guard.position.1] = Tiles::Entered;
+                        guard.position.0 -= 1;
+                    }
+                    Direction::East => {
+                        if guard.position.1 == level[0].len() - 1 {
+                            guard.on_screen = false;
+                            break;
+                        }
+                        if level_clone[guard.position.0][guard.position.1+1] == Tiles::Obstacle {
+                            guard.direction = Direction::South;
+                            continue;
+                        }
+                        level_clone[guard.position.0][guard.position.1+1] = Tiles::Guard(Direction::East);
+                        level_clone[guard.position.0][guard.position.1] = Tiles::Entered;
+                        guard.position.1 += 1;
+                    }
+                    Direction::South => {
+                        if guard.position.0 == level.len() - 1 {
+                            guard.on_screen = false;
+                            break;
+                        }
+                        if level_clone[guard.position.0+1][guard.position.1] == Tiles::Obstacle {
+                            guard.direction = Direction::West;
+                            continue;
+                        }
+                        level_clone[guard.position.0+1][guard.position.1] = Tiles::Guard(Direction::South);
+                        level_clone[guard.position.0][guard.position.1] = Tiles::Entered;
+                        guard.position.0 += 1;
+                    }
+                    Direction::West => {
+                        if guard.position.1 == 0 {
+                            guard.on_screen = false;
+                            break;
+                        }
+                        if level_clone[guard.position.0][guard.position.1-1] == Tiles::Obstacle {
+                            guard.direction = Direction::North;
+                            continue;
+                        }
+                        level_clone[guard.position.0][guard.position.1-1] = Tiles::Guard(Direction::West);
+                        level_clone[guard.position.0][guard.position.1] = Tiles::Entered;
+                        guard.position.1 -= 1;
+                    }
+                }
+                if guard.position == guard.start_position {
+                    loops_count+=1;
+                    break;
+                }
+            }
+        }
+    }
+
+    loops_count
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -441,4 +600,11 @@ mod tests {
         let result = day6(input);
         assert_eq!(result, 41);
     }
+
+        #[test]
+        fn test_day6_part2() {
+            let input: String = fs::read_to_string("inputs/tests/day6.txt").unwrap();
+            let result = day6_part2(input);
+            assert_eq!(result, 6);
+        }
 }
