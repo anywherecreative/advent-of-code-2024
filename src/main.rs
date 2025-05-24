@@ -1,5 +1,6 @@
 use std::fs;
 use std::fs::read_to_string;
+// use std::io::BufRead;
 use regex::Regex;
 
 fn main() {
@@ -11,10 +12,13 @@ fn main() {
     // let input_manuals: String = fs::read_to_string("inputs/day5_manuals.txt").unwrap();
     // println!("Day 5 P1: {}",day5(input_order_rules,input_manuals));
     
-    let file_content =  fs::read_to_string("inputs/day5_part2.txt").unwrap();
-    let day5_input= file_content.split("\n\n").collect::<Vec<&str>>();
-    let (input_order_rules, input_manuals) = day5_input.split_at(1);
-    let result = day5_part2(input_order_rules[0].to_string(),input_manuals[0].to_string());
+    // let file_content =  fs::read_to_string("inputs/day5_part2.txt").unwrap();
+    // let day5_input= file_content.split("\n\n").collect::<Vec<&str>>();
+    // let (input_order_rules, input_manuals) = day5_input.split_at(1);
+    // let result = day5_part2(input_order_rules[0].to_string(),input_manuals[0].to_string());
+    // println!("Result: {}", result);
+    
+    let result = day6(fs::read_to_string("inputs/day6.txt").unwrap());
     println!("Result: {}", result);
 }
 
@@ -246,6 +250,153 @@ fn split_to_tuple(s: &str, delimiter: char) -> (&str, &str) {
     (left, right)
 }
 
+#[derive(Debug, PartialEq, Eq)]
+enum Direction {
+    North,
+    South,
+    East,
+    West,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum Tiles {
+    Obstacle,
+    Guard(Direction),
+    Empty,
+    Entered,
+}
+
+struct Guard {
+    direction: Direction,
+    position: (usize, usize),
+    on_screen: bool,
+}
+
+fn day6(input: String) -> i32 {
+    let mut guard: Guard = Guard {
+        direction: Direction::North,
+        position: (0,0),
+        on_screen: false,
+    };
+
+    let mut level: Vec<Vec<Tiles>> = Vec::new();
+
+    for (i,row) in input.lines().into_iter().enumerate() {
+        let mut row_vec: Vec<Tiles> = Vec::new();
+        for (j,tile) in row.chars().enumerate() {
+            if tile == '.' {
+                row_vec.push(Tiles::Empty);
+            }
+            else if tile == '#' {
+                row_vec.push(Tiles::Obstacle);
+            }
+            else if tile == '^' {
+                guard = Guard {
+                    direction: Direction::North,
+                    position: (i, j),
+                    on_screen: true,
+                };
+                row_vec.push(Tiles::Guard(Direction::North));
+            }
+            else if tile == '>' {
+                guard = Guard {
+                    direction: Direction::East,
+                    position: (i, j),
+                    on_screen: true,
+                };
+                row_vec.push(Tiles::Guard(Direction::East));
+            }
+            else if tile == 'v' {
+                guard = Guard {
+                    direction: Direction::South,
+                    position: (i, j),
+                    on_screen: true,
+                };
+                row_vec.push(Tiles::Guard(Direction::South));
+            }
+            else {
+                guard = Guard {
+                    direction: Direction::West,
+                    position: (i, j),
+                    on_screen: true,
+                };
+                row_vec.push(Tiles::Guard(Direction::West));
+            }
+
+        }
+        level.push(row_vec);
+    }
+
+    while guard.on_screen == true {
+        match guard.direction {
+            Direction::North => {
+                if guard.position.0 == 0 {
+                    guard.on_screen = false;
+                    break;
+                }
+                if level[guard.position.0-1][guard.position.1] == Tiles::Obstacle {
+                    guard.direction = Direction::East;
+                    continue;
+                }
+                level[guard.position.0-1][guard.position.1] = Tiles::Guard(Direction::North);
+                level[guard.position.0][guard.position.1] = Tiles::Entered;
+                guard.position.0 -= 1;
+            }
+            Direction::East => {
+                if guard.position.1 == level[0].len() - 1 {
+                    guard.on_screen = false;
+                    break;
+                }
+                if level[guard.position.0][guard.position.1+1] == Tiles::Obstacle {
+                    guard.direction = Direction::South;
+                    continue;
+                }
+                level[guard.position.0][guard.position.1+1] = Tiles::Guard(Direction::East);
+                level[guard.position.0][guard.position.1] = Tiles::Entered;
+                guard.position.1 += 1;
+            }
+            Direction::South => {
+                if guard.position.0 == level.len() - 1 {
+                    guard.on_screen = false;
+                    break;
+                }
+                if level[guard.position.0+1][guard.position.1] == Tiles::Obstacle {
+                    guard.direction = Direction::West;
+                    continue;
+                }
+                level[guard.position.0+1][guard.position.1] = Tiles::Guard(Direction::South);
+                level[guard.position.0][guard.position.1] = Tiles::Entered;
+                guard.position.0 += 1;
+            }
+            Direction::West => {
+                if guard.position.1 == 0 {
+                    guard.on_screen = false;
+                    break;
+                }
+                if level[guard.position.0][guard.position.1-1] == Tiles::Obstacle {
+                    guard.direction = Direction::North;
+                    continue;
+                }
+                level[guard.position.0][guard.position.1-1] = Tiles::Guard(Direction::West);
+                level[guard.position.0][guard.position.1] = Tiles::Entered;
+                guard.position.1 -= 1;
+            }
+        }
+    }
+
+    let mut tiles_covered = 0;
+    for row in &level {
+        for tile in row {
+            if let &Tiles::Entered | &Tiles::Guard(_) = tile {
+                tiles_covered += 1;
+            }
+        }
+        println!();
+    }
+
+    tiles_covered
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -277,10 +428,17 @@ mod tests {
 
     #[test]
      fn test_day5_part2() {
-            let file_content =  fs::read_to_string("inputs/tests/day5_order_rules.txt").unwrap();
-            let day5_input= file_content.split("\n\n").collect::<Vec<&str>>();
-            let (input_order_rules, input_manuals) = day5_input.split_at(1);
-            let result = day5_part2(input_order_rules[0].to_string(),input_manuals[0].to_string());
-            assert_eq!(result, 123);
-        }
+        let file_content =  fs::read_to_string("inputs/tests/day5_order_rules.txt").unwrap();
+        let day5_input= file_content.split("\n\n").collect::<Vec<&str>>();
+        let (input_order_rules, input_manuals) = day5_input.split_at(1);
+        let result = day5_part2(input_order_rules[0].to_string(),input_manuals[0].to_string());
+        assert_eq!(result, 123);
+    }
+
+    #[test]
+    fn test_day6() {
+        let input: String = fs::read_to_string("inputs/tests/day6.txt").unwrap();
+        let result = day6(input);
+        assert_eq!(result, 41);
+    }
 }
